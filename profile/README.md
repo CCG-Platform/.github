@@ -27,30 +27,35 @@ CCG-Platform은 **Kubernetes 기반의 클라우드 게이밍 인프라**를 제
 
 ```mermaid
 flowchart TB
-    U[Client Browser<br/>WebRTC Video/Audio]
+    U[Client Browser<br/>Login + WebRTC]
 
     subgraph K8S[Kubernetes Cluster]
         I[Traefik<br/>Ingress]
+        B[portal-backend<br/>FastAPI]
         M[PodManager<br/>API]
-        G[Game Containers<br/>GPU/CPU]
-        S[Selkies<br/>WebRTC]
+        SVC[Session Service<br/>ClusterIP]
+        P[Selkies Game Pod<br/>WebRTC Runtime]
         T[Coturn<br/>TURN/STUN]
 
-        I --> M
-        M --> G
-        S --> T
+        I --> B
+        B --> M
+        I -- Cookie-based routing --> SVC
+        SVC --> P
+        M -- Launch / terminate --> P
     end
 
-    subgraph BE[Backend Services]
-        B[FastAPI Backend]
+    subgraph DATA[Data Services (in-cluster or managed)]
         D[(PostgreSQL)]
         R[(Redis)]
-        B --> D
-        B --> R
     end
 
     U --> I
-    K8S --> BE
+    U -- TURN allocation --> T
+    U -- WebRTC signaling/media --> P
+    T -- Relay media fallback --> P
+
+    B --> D
+    B --> R
 ```
 
 ---
