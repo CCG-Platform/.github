@@ -41,17 +41,17 @@ flowchart TB
         B --> M
         I -- Cookie-based routing --> SVC
         SVC --> P
-        M -- Launch / terminate --> P
+        M -- Launch or terminate --> P
     end
 
-    subgraph DATA[Data Services (in-cluster or managed)]
+    subgraph DATA[Data Services]
         D[(PostgreSQL)]
         R[(Redis)]
     end
 
     U --> I
     U -- TURN allocation --> T
-    U -- WebRTC signaling/media --> P
+    U -- WebRTC signaling media --> P
     T -- Relay media fallback --> P
 
     B --> D
