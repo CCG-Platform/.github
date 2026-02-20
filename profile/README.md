@@ -88,8 +88,7 @@ participant S as Session Service (ClusterIP)
 participant P as Game Pod (Selkies)
 participant T as Coturn (TURN)
 
-U->>I: GET https://workspace.ccgp.dev
-Cookie: user-session-id=...
+U->>I: GET https://workspace.ccgp.dev (Cookie: user-session-id=...)
 I->>I: Match Host + Cookie rule
 I->>S: Route to session-specific service
 S->>P: Forward request/signaling
