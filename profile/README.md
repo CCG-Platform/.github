@@ -76,7 +76,8 @@ sequenceDiagram
  P-->>M: Return signaling endpoint/token
  M-->>U: Return connection info
  U->>T: Allocate TURN relay (fallback)
- U<->>P: WebRTC stream + control
+ U->>P: WebRTC signaling/control
+ P-->>U: WebRTC video/audio stream
 ```
 
 핵심 흐름은 **인증/할당(HTTP)** 후 **실시간 스트리밍(WebRTC)** 으로 전환되는 2단계입니다.
