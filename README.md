@@ -14,6 +14,7 @@
 
 ```
 .github/
+├── LICENSE             # MIT License
 ├── README.md           # 이 파일
 └── profile/
     └── README.md       # 조직 프로필 페이지 (https://github.com/CCG-Platform)

@@ -5,7 +5,7 @@
 ### Cloud Container Gaming Platform
 
 [![Organization](https://img.shields.io/badge/organization-CCG--Platform-blue?style=for-the-badge)](https://github.com/CCG-Platform)
-[![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](../LICENSE)
 
 **컨테이너 기반 클라우드 게이밍 플랫폼**
 
@@ -54,6 +54,32 @@ CCG-Platform은 **Kubernetes 기반의 클라우드 게이밍 인프라**를 제
 │  └─────────────┘  └─────────────┘  └─────────────┘              │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## Sequence Diagram
+
+```mermaid
+sequenceDiagram
+    participant U as User Browser
+    participant I as Traefik Ingress
+    participant M as PodManager API
+    participant B as portal-backend
+    participant P as Game Pod (Selkies)
+    participant T as Coturn (TURN)
+
+    U->>I: Open workspace URL
+    I->>M: Request pod allocation
+    M->>B: Validate user/session
+    B-->>M: Return auth + workspace metadata
+    M->>P: Create or reuse game pod
+    P-->>M: Return signaling endpoint/token
+    M-->>U: Return connection info
+    U->>T: Allocate TURN relay (fallback)
+    U<->>P: WebRTC stream + control
+```
+
+핵심 흐름은 **인증/할당(HTTP)** 후 **실시간 스트리밍(WebRTC)** 으로 전환되는 2단계입니다.
 
 ---
 
