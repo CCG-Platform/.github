@@ -81,6 +81,23 @@ sequenceDiagram
 
 핵심 흐름은 **인증/할당(HTTP)** 후 **실시간 스트리밍(WebRTC)** 으로 전환되는 2단계입니다.
 
+### Session Teardown Sequence
+
+```mermaid
+sequenceDiagram
+    participant U as User Browser
+    participant B as portal-backend
+    participant M as PodManager API
+    participant K as Kubernetes API
+
+    U->>B: Request workspace termination
+    B->>M: Delete user workspace resources
+    M->>K: Delete Deployment/Service/IngressRoute
+    K-->>M: Resource deletion complete
+    M-->>B: Cleanup status
+    B-->>U: Termination confirmed
+```
+
 ---
 
 ## Tech Stack
