@@ -55,30 +55,51 @@ flowchart TB
 
 ---
 
-## Sequence Diagram
+## Sequence Diagrams
+
+### 1) Login + Session Cookie Issuance
+
+```mermaid
+sequenceDiagram
+participant U as User Browser
+participant F as CCGP-ui
+participant B as portal-backend
+participant M as PodManager API
+
+U->>F: Login (id/password)
+F->>B: POST /login
+B-->>F: Access token (JWT)
+
+U->>F: Create/Connect workspace
+F->>B: POST /workspaces or /workspaces/connect
+B->>M: Create/verify workspace resources
+M-->>B: Session/workspace metadata
+B-->>F: Set-Cookie user-session-id
+F-->>U: Open workspace.ccgp.dev
+```
+
+### 2) Cookie-based Auth + Routing
 
 ```mermaid
 sequenceDiagram
 participant U as User Browser
 participant I as Traefik Ingress
-participant M as PodManager API
-participant B as portal-backend
+participant S as Session Service (ClusterIP)
 participant P as Game Pod (Selkies)
 participant T as Coturn (TURN)
 
-U->>I: Open workspace URL
-I->>M: Request pod allocation
-M->>B: Validate user/session
-B-->>M: Return auth + workspace metadata
-M->>P: Create or reuse game pod
-P-->>M: Return signaling endpoint/token
-M-->>U: Return connection info
-U->>T: Allocate TURN relay (fallback)
-U->>P: WebRTC signaling/control
-P-->>U: WebRTC video/audio stream
+U->>I: GET https://workspace.ccgp.dev
+Cookie: user-session-id=...
+I->>I: Match Host + Cookie rule
+I->>S: Route to session-specific service
+S->>P: Forward request/signaling
+P-->>U: Web UI + WebRTC signaling
+U->>T: TURN relay allocation (fallback)
+P-->>U: WebRTC media stream
 ```
 
-핵심 흐름은 **인증/할당(HTTP)** 후 **실시간 스트리밍(WebRTC)** 으로 전환되는 2단계입니다.
+이 구조는 **(1) 세션 쿠키 발급 단계**와 **(2) 쿠키 기반 라우팅 단계**를 분리해 표현합니다.
+
 
 ### Session Teardown Sequence
 
