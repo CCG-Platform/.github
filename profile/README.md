@@ -25,34 +25,32 @@ CCG-Platform은 **Kubernetes 기반의 클라우드 게이밍 인프라**를 제
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│ Client (Browser) │
-│ WebRTC Video/Audio Stream │
-└──────────────────────────────┬──────────────────────────────────┘
- │
- ▼
-┌─────────────────────────────────────────────────────────────────┐
-│ Kubernetes Cluster │
-│ ┌─────────────┐ ┌─────────────┐ ┌─────────────────────────┐ │
-│ │ Traefik │ │ PodManager │ │ Game Containers │ │
-│ │ (Ingress) │──│ (API) │──│ ┌───┐ ┌───┐ ┌───┐ │ │
-│ └─────────────┘ └─────────────┘ │ │GPU│ │GPU│ │CPU│ ... │ │
-│ │ └───┘ └───┘ └───┘ │ │
-│ ┌─────────────┐ ┌─────────────┐ └─────────────────────────┘ │
-│ │ Selkies │ │ Coturn │ │
-│ │ (WebRTC) │──│ (TURN) │ │
-│ └─────────────┘ └─────────────┘ │
-└─────────────────────────────────────────────────────────────────┘
- │
- ▼
-┌─────────────────────────────────────────────────────────────────┐
-│ Backend Services │
-│ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ │
-│ │ FastAPI │ │ PostgreSQL │ │ Redis │ │
-│ │ (Backend) │──│ (DB) │──│ (Cache) │ │
-│ └─────────────┘ └─────────────┘ └─────────────┘ │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    U[Client Browser<br/>WebRTC Video/Audio]
+
+    subgraph K8S[Kubernetes Cluster]
+        I[Traefik<br/>Ingress]
+        M[PodManager<br/>API]
+        G[Game Containers<br/>GPU/CPU]
+        S[Selkies<br/>WebRTC]
+        T[Coturn<br/>TURN/STUN]
+
+        I --> M
+        M --> G
+        S --> T
+    end
+
+    subgraph BE[Backend Services]
+        B[FastAPI Backend]
+        D[(PostgreSQL)]
+        R[(Redis)]
+        B --> D
+        B --> R
+    end
+
+    U --> I
+    K8S --> BE
 ```
 
 ---
@@ -61,23 +59,23 @@ CCG-Platform은 **Kubernetes 기반의 클라우드 게이밍 인프라**를 제
 
 ```mermaid
 sequenceDiagram
- participant U as User Browser
- participant I as Traefik Ingress
- participant M as PodManager API
- participant B as portal-backend
- participant P as Game Pod (Selkies)
- participant T as Coturn (TURN)
+participant U as User Browser
+participant I as Traefik Ingress
+participant M as PodManager API
+participant B as portal-backend
+participant P as Game Pod (Selkies)
+participant T as Coturn (TURN)
 
- U->>I: Open workspace URL
- I->>M: Request pod allocation
- M->>B: Validate user/session
- B-->>M: Return auth + workspace metadata
- M->>P: Create or reuse game pod
- P-->>M: Return signaling endpoint/token
- M-->>U: Return connection info
- U->>T: Allocate TURN relay (fallback)
- U->>P: WebRTC signaling/control
- P-->>U: WebRTC video/audio stream
+U->>I: Open workspace URL
+I->>M: Request pod allocation
+M->>B: Validate user/session
+B-->>M: Return auth + workspace metadata
+M->>P: Create or reuse game pod
+P-->>M: Return signaling endpoint/token
+M-->>U: Return connection info
+U->>T: Allocate TURN relay (fallback)
+U->>P: WebRTC signaling/control
+P-->>U: WebRTC video/audio stream
 ```
 
 핵심 흐름은 **인증/할당(HTTP)** 후 **실시간 스트리밍(WebRTC)** 으로 전환되는 2단계입니다.
@@ -86,17 +84,17 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
- participant U as User Browser
- participant B as portal-backend
- participant M as PodManager API
- participant K as Kubernetes API
+participant U as User Browser
+participant B as portal-backend
+participant M as PodManager API
+participant K as Kubernetes API
 
- U->>B: Request workspace termination
- B->>M: Delete user workspace resources
- M->>K: Delete Deployment/Service/IngressRoute
- K-->>M: Resource deletion complete
- M-->>B: Cleanup status
- B-->>U: Termination confirmed
+U->>B: Request workspace termination
+B->>M: Delete user workspace resources
+M->>K: Delete Deployment/Service/IngressRoute
+K-->>M: Resource deletion complete
+M-->>B: Cleanup status
+B-->>U: Termination confirmed
 ```
 
 ---
