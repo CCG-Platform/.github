@@ -27,31 +27,31 @@ CCG-Platform은 **Kubernetes 기반의 클라우드 게이밍 인프라**를 제
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                         Client (Browser)                         │
-│                    WebRTC Video/Audio Stream                     │
+│ Client (Browser) │
+│ WebRTC Video/Audio Stream │
 └──────────────────────────────┬──────────────────────────────────┘
-                               │
-                               ▼
+ │
+ ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                      Kubernetes Cluster                          │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │
-│  │   Traefik   │  │  PodManager │  │     Game Containers     │  │
-│  │  (Ingress)  │──│   (API)     │──│  ┌───┐ ┌───┐ ┌───┐     │  │
-│  └─────────────┘  └─────────────┘  │  │GPU│ │GPU│ │CPU│ ... │  │
-│                                     │  └───┘ └───┘ └───┘     │  │
-│  ┌─────────────┐  ┌─────────────┐  └─────────────────────────┘  │
-│  │   Selkies   │  │   Coturn    │                                │
-│  │  (WebRTC)   │──│  (TURN)     │                                │
-│  └─────────────┘  └─────────────┘                                │
+│ Kubernetes Cluster │
+│ ┌─────────────┐ ┌─────────────┐ ┌─────────────────────────┐ │
+│ │ Traefik │ │ PodManager │ │ Game Containers │ │
+│ │ (Ingress) │──│ (API) │──│ ┌───┐ ┌───┐ ┌───┐ │ │
+│ └─────────────┘ └─────────────┘ │ │GPU│ │GPU│ │CPU│ ... │ │
+│ │ └───┘ └───┘ └───┘ │ │
+│ ┌─────────────┐ ┌─────────────┐ └─────────────────────────┘ │
+│ │ Selkies │ │ Coturn │ │
+│ │ (WebRTC) │──│ (TURN) │ │
+│ └─────────────┘ └─────────────┘ │
 └─────────────────────────────────────────────────────────────────┘
-                               │
-                               ▼
+ │
+ ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                        Backend Services                          │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐              │
-│  │   FastAPI   │  │  PostgreSQL │  │    Redis    │              │
-│  │  (Backend)  │──│     (DB)    │──│   (Cache)   │              │
-│  └─────────────┘  └─────────────┘  └─────────────┘              │
+│ Backend Services │
+│ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ │
+│ │ FastAPI │ │ PostgreSQL │ │ Redis │ │
+│ │ (Backend) │──│ (DB) │──│ (Cache) │ │
+│ └─────────────┘ └─────────────┘ └─────────────┘ │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -61,22 +61,22 @@ CCG-Platform은 **Kubernetes 기반의 클라우드 게이밍 인프라**를 제
 
 ```mermaid
 sequenceDiagram
-    participant U as User Browser
-    participant I as Traefik Ingress
-    participant M as PodManager API
-    participant B as portal-backend
-    participant P as Game Pod (Selkies)
-    participant T as Coturn (TURN)
+ participant U as User Browser
+ participant I as Traefik Ingress
+ participant M as PodManager API
+ participant B as portal-backend
+ participant P as Game Pod (Selkies)
+ participant T as Coturn (TURN)
 
-    U->>I: Open workspace URL
-    I->>M: Request pod allocation
-    M->>B: Validate user/session
-    B-->>M: Return auth + workspace metadata
-    M->>P: Create or reuse game pod
-    P-->>M: Return signaling endpoint/token
-    M-->>U: Return connection info
-    U->>T: Allocate TURN relay (fallback)
-    U<->>P: WebRTC stream + control
+ U->>I: Open workspace URL
+ I->>M: Request pod allocation
+ M->>B: Validate user/session
+ B-->>M: Return auth + workspace metadata
+ M->>P: Create or reuse game pod
+ P-->>M: Return signaling endpoint/token
+ M-->>U: Return connection info
+ U->>T: Allocate TURN relay (fallback)
+ U<->>P: WebRTC stream + control
 ```
 
 핵심 흐름은 **인증/할당(HTTP)** 후 **실시간 스트리밍(WebRTC)** 으로 전환되는 2단계입니다.
@@ -85,17 +85,17 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    participant U as User Browser
-    participant B as portal-backend
-    participant M as PodManager API
-    participant K as Kubernetes API
+ participant U as User Browser
+ participant B as portal-backend
+ participant M as PodManager API
+ participant K as Kubernetes API
 
-    U->>B: Request workspace termination
-    B->>M: Delete user workspace resources
-    M->>K: Delete Deployment/Service/IngressRoute
-    K-->>M: Resource deletion complete
-    M-->>B: Cleanup status
-    B-->>U: Termination confirmed
+ U->>B: Request workspace termination
+ B->>M: Delete user workspace resources
+ M->>K: Delete Deployment/Service/IngressRoute
+ K-->>M: Resource deletion complete
+ M-->>B: Cleanup status
+ B-->>U: Termination confirmed
 ```
 
 ---
@@ -152,12 +152,12 @@ sequenceDiagram
 
 ## Features
 
-- ✅ **실시간 게임 스트리밍** - WebRTC 기반 저지연 비디오/오디오
-- ✅ **GPU 가속** - NVIDIA GPU를 활용한 하드웨어 인코딩
-- ✅ **동적 리소스 할당** - Karpenter로 자동 스케일링
-- ✅ **사용자 격리** - NetworkPolicy 기반 네트워크 격리
-- ✅ **Pay-as-you-go** - 분 단위 과금 시스템
-- 🚧 **멀티 리전 지원** *(Coming Soon)*
+- **실시간 게임 스트리밍** - WebRTC 기반 저지연 비디오/오디오
+- **GPU 가속** - NVIDIA GPU를 활용한 하드웨어 인코딩
+- **동적 리소스 할당** - Karpenter로 자동 스케일링
+- **사용자 격리** - NetworkPolicy 기반 네트워크 격리
+- **Pay-as-you-go** - 분 단위 과금 시스템
+- **멀티 리전 지원** *(Coming Soon)*
 
 ---
 
@@ -167,19 +167,19 @@ sequenceDiagram
 <tr>
 <td align="center">
 <a href="https://github.com/CCG-Platform/Document">
-<strong>📚 Documentation</strong><br>
+<strong> Documentation</strong><br>
 문서화 표준 및 가이드
 </a>
 </td>
 <td align="center">
 <a href="https://github.com/CCG-Platform/Document/blob/main/templates/CONTRIBUTING_TEMPLATE.md">
-<strong>🤝 Contributing</strong><br>
+<strong> Contributing</strong><br>
 기여 가이드라인
 </a>
 </td>
 <td align="center">
 <a href="https://github.com/orgs/CCG-Platform/projects">
-<strong>📋 Projects</strong><br>
+<strong> Projects</strong><br>
 로드맵 및 이슈 트래킹
 </a>
 </td>
@@ -205,15 +205,18 @@ git clone https://github.com/CCG-Platform/CCGP-ui.git
 
 ## Contact
 
-- 📧 **Email**: [contact@ccgp.dev](mailto:contact@ccgp.dev)
-- 🐛 **Issues**: 각 레포지토리의 Issues 탭 사용
+- **Email**: [contact@ccgp.dev](mailto:contact@ccgp.dev)
+- **Issues**: 각 레포지토리의 Issues 탭 사용
 
 ---
 
 <div align="center">
 
-**Made with ❤️ by CCG-Platform Team**
+**Made with ️ by CCG-Platform Team**
 
 *Cloud gaming, reimagined.*
 
 </div>
+
+## License
+TODO: 수정필요
